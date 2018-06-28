@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Form</title>
+    <script type="text/javascript" src="libs/instascan.min.js"></script>
+    <script type="text/javascript" src="libs/vcard.min.js"></script>
+  </head>
+  <style>
+    #preview {
+    background-color: red;
+    border: 1px solid red;
+    border-radius: 2px;
+    }
+    #target {
+    height: 200px;
+    width: 200px;
+    padding: 30px;
+    box-shadow:
+      0 0 20px blue,
+      10px 10px 5px green,
+      -10px -10px 5px red,
+      10px -10px 5px yellow;
+    }
+  </style>
+  <body>
+
+    <div id="camera_chooser">
+      No Camera Available !
+    </div>
+
+
+    <video id="preview"></video>
+
+    <div id="target"></div>
+
+    <div>
+    <form id="_form" action="" method="get">
+      <label for="POST-name">Name:</label>
+    <input id="name" type="text" required name="name">
+    </br>
+      <label for="POST-email">email:</label>
+    <input id="email" type="email" required name="email">
+    </br>
+      <input type="submit" value="Continue">
+    </form>
+    </div>
+    <script type="text/javascript">
+
+      let scanner = new Instascan.Scanner({video: document.getElementById('preview')})
+      var camera_dict = {};
+
+      scanner.addListener('scan', function (content) {
+          var vcard = vCard.parse(content);
+          document.getElementById("name").value = vcard.fn[0].value;
+          document.getElementById("email").value = vcard.email[0].value;
+      });
+
+      function update_camera(btn){
+          scanner.start(camera_dict[btn.value]);
+      };
+
+      Instascan.Camera.getCameras().then(function (cameras) {
+          var camera_choices = '';
+          for (var i=0; i < cameras.length; i++){
+              camera_dict[cameras[i].id] = cameras[i];
+              camera_choices += "<label>" + cameras[i].name + "</label><input value=" + cameras[i].id + " type='radio' name='cam' onclick='update_camera(this);'";
+              if (i == 0){
+                  camera_choices += " checked"
+                  scanner.start(cameras[0]);
+              }
+              camera_choices += "></br>"
+          };
+          document.getElementById("camera_chooser").innerHTML = camera_choices;
+      }).catch(function (e) {
+          console.error(e);
+      });
+    </script>
+  </body>
+</html>
